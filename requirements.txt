@@ -26,3 +26,4 @@ wincertstore==0.2
 WTForms==2.2.1
 Keras==2.2.5
 bokeh==2.0.1
+pandas>=1.0.3
