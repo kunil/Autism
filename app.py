@@ -3,105 +3,58 @@ import tensorflow as tf
 from flask import Flask, request, render_template
 import pickle
 import matplotlib.pyplot as plt
-
+from tensorflow.python.keras.backend import set_session
 
 app = Flask(__name__)
 model = pickle.load(open('finalized_model.pkl', 'rb'))
-model2 = pickle.load(open('svm_autism_model.pkl', 'rb'))
-model3 = pickle.load(open('knn_autism_model.pkl','rb'))
-model4 = pickle.load(open('naive_bayes_autism_model.pkl','rb'))
-model5 = pickle.load(open('stochastic_autism_model.pkl','rb'))
 graph=tf.get_default_graph()
+
+
+#data1 = pd.read_csv('Autism_Data - HT3.csv', names=['stimuli','heart','temp', 'facial','target'])
+#target= data1['target']
+#feature_names = data1.columns[0:-1].values.tolist() 
+
+#def create_figure(current_feature_name, bins):
+    #p = figure(title=current_feature_name, x_axis_label = current_feature_name, y_axis_label = 'Count')
+    #p.line(current_feature_name, 'target', line_width=2)
+    #return p  
                 
 @app.route('/')
 def home():
-    return render_template('index.html',data=[{"name":"CNN"},{"name":"SVM"},{"name":"KNN"},{"name":"Naive Bayes"},{"name":"Stochastic"}])
+    return render_template('index.html')
 
-@app.route('/predict',methods=['GET','POST'])
+@app.route('/predict',methods=['POST'])
 def predict():
     '''
     For rendering results on HTML GUI
     '''
-    select = request.form.get("model")
-    global graph
+    global graph 
     with graph.as_default():
+        
         true=0;
         false=0;
         data = pd.read_csv(request.files["data"]);
+       #current_feature_name = request.args.get("feature_name")
+        ###plot = create_figure(current_feature_name, 10)
+        #script, div = components(plot)
+        #tshow(p)
+        #data.save(os.path.join("", data.filename))
         X = pd.DataFrame(data.iloc[:, 0:4])
-        if select=="CNN" :
-            prediction = model.predict(X)
-            prediction=(prediction>0.5)
-            for i in prediction:
-                if(i):
-                    true=true+1;
-                else:
-                    false=false+1;
-            prob = true/(false+true) 
-            prob= round(prob,2)
-            print(prob)
-            if (true>false):
-                output="SENSORY DISORDER MIGHT BE PRESENT.\n The predicted probability is 0.92. \nThe model uses Neural Network to generate this report. \nThe accuracy of this model is 94%. The precision for a child having sensory disorder is 0.97. It can model complex, multivariate sensory time series data. According to the session data provided to the system the autistic patient might have a sensory disorder (Auditory and Visual) present."
+        prediction = model.predict(X)
+        prediction=(prediction>0.5)
+        for i in prediction:
+            if(i):
+                true=true+1;
             else:
-                output="Sensory Disorder not present"
-        elif select =="SVM":
-            prediction = model2.predict(X)
-            prediction=(prediction>0.5)
-            for i in prediction:
-                if(i):
-                    true=true+1;
-                else:
-                    false=false+1;     
-            prob = true/(false+true) 
-            prob= round(prob,2)
-            if (true>false):
-                output="Sensory Disorder might be present(SVM)"
-            else:
-                output="Sensory Disorder not present(SVM). The predicted probability is " + str(prob) +". \nThe model uses SVM to generate this report. \nThe accuracy of this model is 83%. The precision for a child not having sensory disorder is 0.79. According to the session data provided to the system the autistic patient don't. have a sensory disorder(Auditory and Visual) present."
-        elif select == "KNN":
-            prediction = model3.predict(X)
-            prediction=(prediction>0.5)
-            for i in prediction:
-                if(i):
-                    true=true+1;
-                else:
-                    false=false+1;
+                false=false+1;
                 
-            if (true>false):
-                output="Sensory Disorder might be present(KNN)"
-            else:
-                output="Sensory Disorder not present(KNN)"
-        elif select=="Naive Bayes" :
-            prediction = model4.predict(X)
-            prediction=(prediction>0.5)
-            for i in prediction:
-                if(i):
-                    true=true+1;
-                else:
-                    false=false+1;
-                
-            if (true>false):
-               output="Sensory Disorder might be present(NB)"
-            else:
-                output="Sensory Disorder not present(NB)"
+        if (true>false):
+            output="Sensory Disorder might be present"
         else:
-            prediction = model5.predict(X)
-            prediction=(prediction>0.5)
-            for i in prediction:
-                if(i):
-                    true=true+1;
-                else:
-                    false=false+1;
-                
-            if (true>false):
-                output="Sensory Disorder might be present(Stochastic)"
-            else:
-                output="Sensory Disorder not present(Stochastic)"
+            output="Sensory Disorder not present"
 
     return render_template('index.html', prediction_text='{}'.format(output))
 
-
-    
 
 if __name__ == "__main__":
     app.run(debug=True)
