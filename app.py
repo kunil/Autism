@@ -2,8 +2,7 @@ import pandas as pd
 import tensorflow as tf
 from flask import Flask, request, render_template
 import pickle
-import matplotlib.pyplot as plt
-from tensorflow.python.keras.backend import set_session
+
 
 app = Flask(__name__)
 model = pickle.load(open('finalized_model.pkl', 'rb'))
